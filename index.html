@@ -1,0 +1,1236 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>CARI PRODUK INDOMARET - IDM Help Bot</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- JsBarcode CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+  <!-- html5-qrcode CDN -->
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
+  <style>
+    :root {
+      --primary: #1565c0;
+      --primary-light: #e3f2fd;
+      --primary-dark: #0d47a1;
+      --accent: #29b6f6;
+      --text-main: #0b1630;
+      --text-muted: #546e7a;
+      --card-bg: #ffffff;
+      --body-bg: #f3f7fb;
+      --danger: #c62828;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    body {
+      background: var(--body-bg);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      background: linear-gradient(120deg, var(--primary), var(--accent));
+      color: #fff;
+      padding: 10px 14px 10px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    header h1 {
+      font-size: 18px;
+      font-weight: 700;
+      text-align: center;
+      letter-spacing: 0.06em;
+    }
+
+    .bot-credit {
+      text-align: center;
+      color: #e3f2fd;
+    }
+
+    .bot-credit a {
+      color: #fffde7;
+      text-decoration: none;
+    }
+
+    .bot-credit a:hover {
+      text-decoration: underline;
+    }
+
+    .search-row {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+    }
+
+    .search-unified {
+      margin-top: 4px;
+    }
+
+    .search-box {
+      position: relative;
+      flex: 1;
+      max-width: 520px;
+      display: flex;
+      align-items: center;
+    }
+
+    .search-box input {
+      width: 100%;
+      padding: 8px 74px 8px 10px;
+      border-radius: 999px;
+      border: none;
+      outline: none;
+      font-size: 14px;
+    }
+
+    .search-box .icon-btn {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      border: none;
+      background: var(--primary-dark);
+      color: #fff;
+      font-size: 15px;
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .search-box .icon-btn:hover {
+      background: var(--primary);
+    }
+
+    #scanBtn {
+      right: 38px;
+    }
+
+    #clearBtn {
+      right: 6px;
+      background: var(--danger);
+    }
+
+    #clearBtn:hover {
+      background: #ff1744;
+    }
+
+    .search-unified .btn-main {
+      padding: 8px 14px;
+      border-radius: 999px;
+      border: none;
+      background: var(--primary-dark);
+      color: #fff;
+      font-size: 13px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .search-unified .btn-main:hover {
+      background: var(--primary);
+    }
+
+    main {
+      flex: 1;
+      padding: 12px;
+      max-width: 1000px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    .welcome {
+      font-size: 14px;
+      color: var(--text-main);
+      margin-bottom: 10px;
+    }
+
+    .info {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .product-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 10px;
+    }
+
+    .product-card {
+      background: var(--card-bg);
+      border-radius: 10px;
+      padding: 8px;
+      box-shadow: 0 2px 6px rgba(13, 71, 161, 0.08);
+      border: 1px solid rgba(21, 101, 192, 0.1);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      cursor: pointer;
+      transition: transform 0.12s ease, box-shadow 0.12s ease;
+    }
+
+    .product-card:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 3px 10px rgba(13, 71, 161, 0.16);
+    }
+
+    .product-image-wrapper {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      background: var(--primary-light);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .product-image-wrapper img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+
+    .product-name {
+      font-size: 13px;
+      font-weight: 600;
+      min-height: 32px;
+      color: var(--text-main);
+    }
+
+    .product-price {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--primary-dark);
+    }
+
+    .product-price .normal {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-decoration: line-through;
+      margin-left: 4px;
+    }
+
+    .product-price .discount {
+      font-size: 11px;
+      color: var(--danger);
+      margin-left: 4px;
+      font-weight: 600;
+    }
+
+    .product-meta {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .product-actions {
+      margin-top: 4px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .btn-add {
+      padding: 5px 10px;
+      border-radius: 999px;
+      border: none;
+      background: var(--primary);
+      color: #fff;
+      font-size: 11px;
+      cursor: pointer;
+    }
+
+    .btn-add:hover {
+      background: var(--primary-dark);
+    }
+
+    .loading,
+    .error {
+      text-align: center;
+      font-size: 13px;
+      color: var(--text-muted);
+      margin: 10px 0;
+    }
+
+    .error {
+      color: var(--danger);
+    }
+
+    #scanner-container {
+      display: none;
+      padding: 10px 0;
+    }
+
+    #load-more-container {
+      text-align: center;
+      margin-top: 8px;
+      display: none;
+    }
+
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+    }
+
+    .modal-overlay.show {
+      display: flex;
+    }
+
+    .modal-content {
+      background: #ffffff;
+      border-radius: 12px;
+      max-width: 520px;
+      width: 100%;
+      max-height: 95vh;
+      overflow-y: auto;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    }
+
+    .modal-header {
+      padding: 10px 12px;
+      border-bottom: 1px solid #e0e0e0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--primary-light);
+    }
+
+    .modal-title {
+      font-size: 15px;
+      font-weight: 600;
+      margin-right: 8px;
+    }
+
+    .modal-close {
+      border: none;
+      background: transparent;
+      font-size: 20px;
+      cursor: pointer;
+      line-height: 1;
+      color: var(--primary-dark);
+    }
+
+    .modal-body {
+      padding: 10px 12px 12px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .modal-image-wrapper {
+      width: 100%;
+      background: var(--primary-light);
+      border-radius: 10px 10px 0 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      padding: 6px;
+    }
+
+    .modal-image-wrapper img {
+      max-width: 100%;
+      max-height: 260px;
+      object-fit: contain;
+    }
+
+    .barcode-wrapper {
+      background: #ffffff;
+      border-radius: 0 0 10px 10px;
+      padding: 4px 8px 6px 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      border-bottom: 1px solid #e0e0e0;
+      border-left: 1px solid #e0e0e0;
+      border-right: 1px solid #e0e0e0;
+      margin-top: -1px;
+    }
+
+    .barcode-wrapper canvas {
+      width: 100%;
+      max-width: 340px;
+    }
+
+    .barcode-text {
+      font-size: 11px;
+      color: var(--text-main);
+      font-family: "Courier New", monospace;
+      word-break: break-all;
+    }
+
+    .barcode-label {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .modal-price {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--primary-dark);
+      margin-top: 4px;
+    }
+
+    .modal-price .normal {
+      font-size: 12px;
+      color: var(--text-muted);
+      text-decoration: line-through;
+      margin-left: 6px;
+    }
+
+    .modal-price .discount {
+      font-size: 12px;
+      color: var(--danger);
+      margin-left: 6px;
+      font-weight: 600;
+    }
+
+    .modal-meta {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .modal-meta strong {
+      color: var(--text-main);
+    }
+
+    .modal-desc {
+      font-size: 12px;
+      color: var(--text-main);
+      line-height: 1.4;
+      white-space: pre-line;
+    }
+
+    .modal-footer {
+      padding: 8px 12px 10px 12px;
+      border-top: 1px solid #e0e0e0;
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .btn-secondary {
+      padding: 6px 12px;
+      border-radius: 999px;
+      border: 1px solid #ccc;
+      background: #f5f5f5;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .btn-primary {
+      padding: 6px 14px;
+      border-radius: 999px;
+      border: none;
+      background: var(--primary);
+      color: #fff;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-dark);
+    }
+
+    footer {
+      text-align: center;
+      font-size: 11px;
+      color: var(--text-muted);
+      padding: 6px 8px 10px 8px;
+      border-top: 1px solid #e0e0e0;
+      background: #f9fbff;
+    }
+
+    @media (max-width: 600px) {
+      header {
+        padding: 10px 8px;
+      }
+
+      .bot-credit {
+        font-size: 11px;
+      }
+
+      main {
+        padding: 10px;
+      }
+
+      .product-list {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .modal-content {
+        width: 94%;
+        border-radius: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>CARI PRODUK INDOMARET</h1>
+
+    <small class="bot-credit">
+      <a href="https://t.me/idm_help_bot" target="_blank">idm_help</a> |
+      <a href="https://saweria.co/idmhelpbot" target="_blank">Dukung</a> |
+      <a href="https://carimega.vercel.app/" target="_blank">Mega</a> |
+      <a href="https://hargayomart.vercel.app/" target="_blank">Yomart</a> |
+      <a href="https://idmhelp.vercel.app/" target="_blank">Indomaret</a> |
+	  <a href="https://plu-barcode.vercel.app/" target="_blank">Barcode</a> |
+      <a href="https://harga-alfa.vercel.app/" target="_blank">Alfamart</a>
+    </small>
+
+    <div class="search-row search-unified">
+      <div class="search-box">
+        <input id="unified-input" type="search"
+               placeholder="🔍 Cari Nama / PLU / Barcode... (bisa scan)"
+               minlength="4" maxlength="20">
+        <button class="icon-btn" id="scanBtn" title="Scan kamera">📷</button>
+        <button class="icon-btn" id="clearBtn" title="Hapus semua">✕</button>
+      </div>
+      <button class="btn-main" id="btn-search-unified">Cari</button>
+    </div>
+  </header>
+
+  <main>
+    <div class="welcome" id="welcome-text">
+      Selamat datang di IDM Help Bot. Silakan ketik nama, PLU, barcode, atau gunakan kamera untuk scan barcode produk.
+    </div>
+    <div class="info" id="info-text"></div>
+    <div class="loading" id="loading" style="display:none;">Memuat data...</div>
+    <div class="error" id="error" style="display:none;"></div>
+
+    <!-- SCANNER DI ATAS LIST -->
+    <div id="scanner-container">
+      <div id="reader" style="width:100%; max-width:380px; margin:0 auto;"></div>
+      <div style="text-align:center; margin-top:6px;">
+        <select id="camera-select" style="font-size:12px; padding:4px 6px; max-width:220px;"></select>
+        <button id="btn-switch-camera" class="btn-secondary" style="margin-left:4px;">Ubah kamera</button>
+        <button id="btn-stop-scan" class="btn-secondary" style="margin-left:4px;">Stop Scan</button>
+      </div>
+    </div>
+
+    <div class="product-list" id="product-list"></div>
+
+    <div id="load-more-container">
+      <button id="btn-load-more" class="btn-secondary">Lihat hasil berikutnya</button>
+    </div>
+  </main>
+
+  <footer>
+    © 2025 IDM Help Bot - All rights reserved
+  </footer>
+
+  <div class="modal-overlay" id="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title" id="detail-name">Nama Produk</div>
+        <button class="modal-close" id="btn-close-modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-image-wrapper">
+          <img id="detail-image" src="" alt="Gambar Produk">
+        </div>
+
+        <div class="barcode-wrapper">
+          <div class="barcode-label">Barcode</div>
+          <canvas id="barcode-canvas"></canvas>
+          <div class="barcode-text" id="barcode-text"></div>
+        </div>
+
+        <div class="modal-price" id="detail-price"></div>
+        <div class="modal-meta" id="detail-meta"></div>
+        <div class="modal-meta" id="detail-plu"></div>
+        <div class="modal-desc" id="detail-desc"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" id="btn-close-footer">Tutup</button>
+        <button class="btn-primary">Tambah ke keranjang</button>
+      </div>
+    </div>
+  </div>
+
+ <script>
+  const BASE_URL =
+    "https://ap-mc.klikindomaret.com/assets-klikidmsearch/api/get/catalog-xpress/api/webapp/search/result";
+
+  const BARCODE_JSON_URL =
+    "https://raw.githubusercontent.com/idmhelpbot/Listing/main/barcode/barcodesheet.json";
+
+  const productListEl = document.getElementById("product-list");
+  const unifiedInput = document.getElementById("unified-input");
+  const btnSearchUnified = document.getElementById("btn-search-unified");
+  const scanBtn = document.getElementById("scanBtn");
+  const clearBtn = document.getElementById("clearBtn");
+  const loadingEl = document.getElementById("loading");
+  const errorEl = document.getElementById("error");
+  const infoTextEl = document.getElementById("info-text");
+  const welcomeTextEl = document.getElementById("welcome-text");
+
+  const scannerContainer = document.getElementById("scanner-container");
+  const btnStopScan = document.getElementById("btn-stop-scan");
+  const cameraSelect = document.getElementById("camera-select");
+  const btnSwitchCamera = document.getElementById("btn-switch-camera");
+
+  const loadMoreContainer = document.getElementById("load-more-container");
+  const btnLoadMore = document.getElementById("btn-load-more");
+
+  const modal = document.getElementById("modal");
+  const btnCloseModal = document.getElementById("btn-close-modal");
+  const btnCloseFooter = document.getElementById("btn-close-footer");
+  const detailName = document.getElementById("detail-name");
+  const detailImage = document.getElementById("detail-image");
+  const detailPrice = document.getElementById("detail-price");
+  const detailMeta = document.getElementById("detail-meta");
+  const detailPlu = document.getElementById("detail-plu");
+  const detailDesc = document.getElementById("detail-desc");
+  const barcodeCanvas = document.getElementById("barcode-canvas");
+  const barcodeText = document.getElementById("barcode-text");
+
+  let allProducts = [];
+  let barcodeMap = {};
+  let html5Qrcode = null;
+  let scanning = false;
+  let currentCameraId = null;
+
+  // PAGINATION
+  let currentPage = 1;
+  const PAGE_SIZE = 20;
+
+  function formatRupiah(num) {
+    if (num == null || num === "") return "-";
+    return "Rp " + Number(num).toLocaleString("id-ID");
+  }
+
+  function buildUrl(keyword) {
+    const params = new URLSearchParams({
+      keyword: keyword,
+      type: "keyword",
+      columnView: "2",
+      page: "0",
+      size: "500",
+      isUserFiltered: "false",
+      storeCode: "TJKT",
+      latitude: "0",
+      longitude: "0",
+      mode: "DELIVERY"
+    });
+    return BASE_URL + "?" + params.toString();
+  }
+
+  async function loadBarcodeSheet() {
+    try {
+      const res = await fetch(BARCODE_JSON_URL);
+      const data = await res.json();
+      const map = {};
+      if (Array.isArray(data)) {
+        data.forEach(item => {
+          if (item.plu && item.barcode) {
+            map[String(item.plu).trim()] = String(item.barcode).trim();
+          }
+        });
+      }
+      barcodeMap = map;
+    } catch (err) {
+      console.error("Gagal load barcodesheet.json", err);
+    }
+  }
+
+  function generateBarcode(dataCode) {
+    const code = String(dataCode || "").trim();
+    const ctx = barcodeCanvas.getContext("2d");
+    ctx.clearRect(0, 0, barcodeCanvas.width, barcodeCanvas.height);
+
+    if (!code) {
+      barcodeText.textContent = "Barcode tidak tersedia";
+      return;
+    }
+
+    const isNumeric = /^\d+$/.test(code);
+
+    if (isNumeric && (code.length === 13 || code.length === 12 || code.length === 8)) {
+      try {
+        const fmt = code.length === 13
+          ? "EAN13"
+          : (code.length === 8 ? "EAN8" : "UPC");
+
+        JsBarcode(barcodeCanvas, code, {
+          format: fmt,
+          displayValue: false,
+          width: 2,
+          height: 70,
+          margin: 0
+        });
+        barcodeText.textContent = code;
+        return;
+      } catch (e) {
+        console.warn("Gagal render EAN/UPC, fallback CODE128:", e);
+        ctx.clearRect(0, 0, barcodeCanvas.width, barcodeCanvas.height);
+      }
+    }
+
+    try {
+      JsBarcode(barcodeCanvas, code, {
+        format: "CODE128",
+        displayValue: false,
+        width: 1.6,
+        height: 70,
+        margin: 0
+      });
+      barcodeText.textContent = code;
+    } catch (e) {
+      console.error("Gagal generate barcode:", e);
+      ctx.clearRect(0, 0, barcodeCanvas.width, barcodeCanvas.height);
+      barcodeText.textContent = "Barcode tidak tersedia";
+    }
+  }
+
+  function generateBarcodeForPlu(plu) {
+    const key = plu ? String(plu).trim() : "";
+    const codeFromMap = key && barcodeMap[key] ? barcodeMap[key] : null;
+    if (codeFromMap) {
+      generateBarcode(codeFromMap);
+    } else {
+      generateBarcode(key);
+    }
+  }
+
+  function openModal(product) {
+    detailName.textContent = product.productName || "Produk";
+
+    const imgUrl =
+      product.imageUrl ||
+      product.thumbnail ||
+      (product.images && product.images[0]) ||
+      "";
+    detailImage.src = imgUrl;
+    detailImage.onerror = () => {
+      detailImage.src =
+        "https://via.placeholder.com/400x300?text=No+Image";
+    };
+
+    const finalPrice =
+      product.finalPrice != null ? product.finalPrice : product.price;
+    const hasDiscount =
+      product.finalPrice != null &&
+      product.finalPrice !== product.price &&
+      product.discountText;
+
+    detailPrice.innerHTML = "";
+    const spanMain = document.createElement("span");
+    spanMain.textContent = formatRupiah(finalPrice);
+    detailPrice.appendChild(spanMain);
+
+    if (hasDiscount) {
+      const spanNormal = document.createElement("span");
+      spanNormal.className = "normal";
+      spanNormal.textContent = formatRupiah(product.price);
+      detailPrice.appendChild(spanNormal);
+
+      const spanDisc = document.createElement("span");
+      spanDisc.className = "discount";
+      spanDisc.textContent = product.discountText;
+      detailPrice.appendChild(spanDisc);
+    }
+
+    const brand = product.brandName || "";
+    const size = product.size || product.uom || "";
+    const uom = product.uom || "";
+    const metaParts = [];
+    if (brand) metaParts.push("<strong>Brand:</strong> " + brand);
+    if (size) metaParts.push("<strong>Size:</strong> " + size);
+    if (uom && uom !== size) metaParts.push("<strong>UOM:</strong> " + uom);
+    detailMeta.innerHTML = metaParts.join(" &nbsp;•&nbsp; ");
+
+    const plu = product.plu || product.productId || "";
+    detailPlu.innerHTML =
+      "<strong>PLU:</strong> " + (plu || "-");
+
+    let descText = "";
+    if (Array.isArray(product.descriptionList) && product.descriptionList.length > 0) {
+      const firstDesc = product.descriptionList.find(
+        (d) => d.title && d.title.toLowerCase().includes("deskripsi")
+      ) || product.descriptionList[0];
+      descText = (firstDesc && firstDesc.content) || "";
+    }
+    detailDesc.textContent = descText || "Belum ada deskripsi.";
+
+    generateBarcodeForPlu(plu);
+
+    modal.classList.add("show");
+  }
+
+  function closeModal() {
+    modal.classList.remove("show");
+  }
+
+  // ====== RENDER + PAGINATION 20 / HALAMAN ======
+  function renderCurrentPage() {
+    productListEl.innerHTML = "";
+
+    if (!allProducts || allProducts.length === 0) {
+      productListEl.innerHTML =
+        "<p style='font-size:13px;color:#789;'>Tidak ada produk.</p>";
+      loadMoreContainer.style.display = "none";
+      return;
+    }
+
+    const start = (currentPage - 1) * PAGE_SIZE;
+    const end = start + PAGE_SIZE;
+    const pageItems = allProducts.slice(start, end);
+
+    pageItems.forEach((p) => {
+      const card = document.createElement("div");
+      card.className = "product-card";
+
+      const imgWrap = document.createElement("div");
+      imgWrap.className = "product-image-wrapper";
+      const img = document.createElement("img");
+      img.src = p.imageUrl || p.thumbnail || (p.images && p.images[0]) || "";
+      img.alt = p.productName || "Produk";
+      img.onerror = () => {
+        img.src = "https://via.placeholder.com/200x200?text=No+Image";
+      };
+      imgWrap.appendChild(img);
+
+      const name = document.createElement("div");
+      name.className = "product-name";
+      name.textContent = p.productName || "Produk";
+
+      const price = document.createElement("div");
+      price.className = "product-price";
+
+      const finalPrice =
+        p.finalPrice != null ? p.finalPrice : p.price;
+      const hasDiscount =
+        p.finalPrice != null &&
+        p.finalPrice !== p.price &&
+        p.discountText;
+
+      const spanMain = document.createElement("span");
+      spanMain.textContent = formatRupiah(finalPrice);
+      price.appendChild(spanMain);
+
+      if (hasDiscount) {
+        const spanNormal = document.createElement("span");
+        spanNormal.className = "normal";
+        spanNormal.textContent = formatRupiah(p.price);
+        price.appendChild(spanNormal);
+
+        const spanDisc = document.createElement("span");
+        spanDisc.className = "discount";
+        spanDisc.textContent = p.discountText;
+        price.appendChild(spanDisc);
+      }
+
+      const meta = document.createElement("div");
+      meta.className = "product-meta";
+      const brand = p.brandName || "";
+      const size = p.size || p.uom || "";
+      meta.textContent = [brand, size].filter(Boolean).join(" • ");
+
+      const actions = document.createElement("div");
+      actions.className = "product-actions";
+      const sku = document.createElement("span");
+      sku.textContent = p.plu || p.productId || "";
+
+      const btn = document.createElement("button");
+      btn.className = "btn-add";
+      btn.textContent = "Detail";
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        openModal(p);
+      });
+
+      actions.appendChild(sku);
+      actions.appendChild(btn);
+
+      card.appendChild(imgWrap);
+      card.appendChild(name);
+      card.appendChild(price);
+      card.appendChild(meta);
+      card.appendChild(actions);
+
+      card.addEventListener("click", () => {
+        openModal(p);
+      });
+
+      productListEl.appendChild(card);
+    });
+
+    updateNextButton();
+  }
+
+  function updateNextButton() {
+    if (!allProducts || allProducts.length === 0) {
+      loadMoreContainer.style.display = "none";
+      return;
+    }
+    const totalPages = Math.ceil(allProducts.length / PAGE_SIZE);
+    if (currentPage < totalPages) {
+      loadMoreContainer.style.display = "block";
+    } else {
+      loadMoreContainer.style.display = "none";
+    }
+  }
+
+  function goToNextPage() {
+    const totalPages = Math.ceil(allProducts.length / PAGE_SIZE);
+    if (currentPage < totalPages) {
+      currentPage++;
+      renderCurrentPage();
+    }
+  }
+
+  async function fetchProducts(keyword) {
+    loadingEl.style.display = "block";
+    errorEl.style.display = "none";
+    productListEl.innerHTML = "";
+    loadMoreContainer.style.display = "none";
+
+    try {
+      const url = buildUrl(keyword);
+      const res = await fetch(url);
+      if (!res.ok) {
+        throw new Error("Status " + res.status);
+      }
+      const json = await res.json();
+
+      const items =
+        (json.data &&
+          Array.isArray(json.data.content) &&
+          json.data.content) ||
+        [];
+
+      allProducts = items;
+      currentPage = 1;
+
+      const total = json.data && typeof json.data.totalElements === "number"
+        ? json.data.totalElements
+        : allProducts.length;
+
+      const notFound = json.data &&
+        json.data.additionalData &&
+        json.data.additionalData.notFound;
+
+      welcomeTextEl.textContent = "";
+      if (notFound) {
+        infoTextEl.innerHTML =
+          'Kata kunci <strong>' +
+          keyword +
+          "</strong> tidak ditemukan, menampilkan <strong>produk rekomendasi</strong> (total " +
+          total +
+          " produk).";
+      } else {
+        infoTextEl.innerHTML =
+          'Menampilkan hasil untuk: <strong>' +
+          keyword +
+          "</strong> (total " +
+          total +
+          " produk).";
+      }
+
+      renderCurrentPage();
+    } catch (e) {
+      console.error(e);
+      errorEl.style.display = "block";
+      errorEl.textContent =
+        "Gagal memuat data produk. Coba refresh atau ganti kata kunci.";
+    } finally {
+      loadingEl.style.display = "none";
+    }
+  }
+
+  function findProductByPlu(plu) {
+    if (!plu) return null;
+    return allProducts.find(
+      (p) => String(p.plu || "").trim() === String(plu).trim()
+    );
+  }
+
+  function isProbablyPlu(value) {
+    const v = String(value || "").trim();
+    return v.length === 8 && /^\d+$/.test(v);
+  }
+
+  function isProbablyBarcode(value) {
+    const v = String(value || "").trim();
+    return v.length >= 4 && v.length <= 20;
+  }
+
+  async function handleUnifiedSearch(raw) {
+    const text = String(raw || "").trim();
+    if (!text) {
+      welcomeTextEl.textContent =
+        "Selamat datang di IDM Help Bot. Silakan ketik nama, PLU, barcode, atau gunakan kamera untuk scan barcode produk.";
+      infoTextEl.textContent = "";
+      productListEl.innerHTML = "";
+      loadMoreContainer.style.display = "none";
+      allProducts = [];
+      currentPage = 1;
+      return;
+    }
+
+    let keywordUsed = text;
+
+    if (isProbablyPlu(text)) {
+      const plu = text;
+      let product = findProductByPlu(plu);
+      if (product) {
+        openModal(product);
+        infoTextEl.innerHTML =
+          "Menampilkan detail untuk PLU <strong>" + plu + "</strong>.";
+        welcomeTextEl.textContent = "";
+        return;
+      }
+      await fetchProducts(plu);
+      product = findProductByPlu(plu);
+      if (product) {
+        openModal(product);
+      } else {
+        alert("PLU " + plu + " tidak ditemukan di API.");
+      }
+      return;
+    }
+
+    if (isProbablyBarcode(text)) {
+      const barcode = text;
+      const plu = Object.keys(barcodeMap).find(
+        (k) => barcodeMap[k] === barcode
+      );
+      if (plu) {
+        let product = findProductByPlu(plu);
+        keywordUsed = plu;
+        if (product) {
+          openModal(product);
+          infoTextEl.innerHTML =
+            "Hasil scan barcode → PLU <strong>" + plu + "</strong>.";
+          welcomeTextEl.textContent = "";
+          return;
+        }
+        await fetchProducts(plu);
+        product = findProductByPlu(plu);
+        if (product) {
+          openModal(product);
+        } else {
+          alert("Produk dengan PLU " + plu + " tidak ditemukan di API.");
+        }
+        return;
+      }
+    }
+
+    await fetchProducts(keywordUsed);
+  }
+
+  btnSearchUnified.addEventListener("click", () => {
+    handleUnifiedSearch(unifiedInput.value);
+  });
+
+  unifiedInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      handleUnifiedSearch(unifiedInput.value);
+    }
+  });
+
+  // Tombol "Lihat hasil berikutnya" sekarang pindah halaman, bukan append
+  btnLoadMore.addEventListener("click", () => {
+    goToNextPage();
+  });
+
+    async function populateCamerasAndPickDefault() {
+      try {
+        cameraSelect.innerHTML = "";
+        const devices = await Html5Qrcode.getCameras(); // [web:6][web:7]
+        if (!devices || devices.length === 0) {
+          const opt = document.createElement("option");
+          opt.value = "";
+          opt.textContent = "Kamera tidak tersedia";
+          cameraSelect.appendChild(opt);
+          btnSwitchCamera.disabled = true;
+          return null;
+        }
+
+        let defaultIndex = 0;
+        devices.forEach((d, idx) => {
+          const opt = document.createElement("option");
+          opt.value = d.id;
+          opt.textContent = d.label || `Kamera ${idx + 1}`;
+          cameraSelect.appendChild(opt);
+
+          const labelLower = (d.label || "").toLowerCase();
+          if (
+            labelLower.includes("back") ||
+            labelLower.includes("rear") ||
+            labelLower.includes("belakang")
+          ) {
+            defaultIndex = idx;
+          }
+        });
+
+        cameraSelect.selectedIndex = defaultIndex;
+        btnSwitchCamera.disabled = false;
+        return devices[defaultIndex].id;
+      } catch (err) {
+        console.error("Gagal getCameras:", err);
+        const opt = document.createElement("option");
+        opt.value = "";
+        opt.textContent = "Gagal akses kamera";
+        cameraSelect.appendChild(opt);
+        btnSwitchCamera.disabled = true;
+        return null;
+      }
+    }
+
+    async function startScanner() {
+      if (scanning) return;
+      try {
+        productListEl.innerHTML = "";
+        loadMoreContainer.style.display = "none";
+        infoTextEl.textContent = "";
+        errorEl.textContent = "";
+
+        scannerContainer.style.display = "block";
+        scannerContainer.scrollIntoView({ behavior: "smooth", block: "start" });
+
+        const defaultCameraId = await populateCamerasAndPickDefault();
+
+        html5Qrcode = new Html5Qrcode("reader");
+        const config = { fps: 10, qrbox: 250 };
+
+        const cameraConfig = defaultCameraId
+          ? { deviceId: { exact: defaultCameraId } }
+          : { facingMode: { exact: "environment" } }; // [web:7][web:10]
+
+        currentCameraId = defaultCameraId;
+
+        await html5Qrcode.start(
+          cameraConfig,
+          config,
+          (decodedText) => {
+            unifiedInput.value = "";
+            handleUnifiedSearch(decodedText);
+            stopScanner();
+          },
+          () => {}
+        );
+
+        scanning = true;
+      } catch (err) {
+        console.error("Gagal memulai scanner:", err);
+        alert("Tidak bisa memulai scan kamera.");
+        scanning = false;
+        scannerContainer.style.display = "none";
+      }
+    }
+
+    async function switchCamera() {
+      if (!html5Qrcode) return;
+      const newId = cameraSelect.value;
+      if (!newId || newId === currentCameraId) return;
+
+      try {
+        await html5Qrcode.stop();
+        await html5Qrcode.clear();
+
+        const config = { fps: 10, qrbox: 250 };
+        const cameraConfig = { deviceId: { exact: newId } };
+
+        await html5Qrcode.start(
+          cameraConfig,
+          config,
+          (decodedText) => {
+            unifiedInput.value = "";
+            handleUnifiedSearch(decodedText);
+            stopScanner();
+          },
+          () => {}
+        );
+
+        currentCameraId = newId;
+        scanning = true;
+      } catch (err) {
+        console.error("Gagal ubah kamera:", err);
+        alert("Tidak bisa mengubah kamera.");
+      }
+    }
+
+    async function stopScanner() {
+      if (!scanning || !html5Qrcode) {
+        scannerContainer.style.display = "none";
+        return;
+      }
+      try {
+        await html5Qrcode.stop();
+        await html5Qrcode.clear();
+      } catch (err) {
+        console.error("Gagal stop scanner:", err);
+      }
+      scanning = false;
+      scannerContainer.style.display = "none";
+    }
+
+    scanBtn.addEventListener("click", () => {
+      if (scannerContainer.style.display === "block" || scanning) {
+        stopScanner();
+      } else {
+        startScanner();
+      }
+    });
+
+    btnStopScan.addEventListener("click", () => {
+      stopScanner();
+    });
+
+    btnSwitchCamera.addEventListener("click", () => {
+      switchCamera();
+    });
+
+    clearBtn.addEventListener("click", async () => {
+      unifiedInput.value = "";
+      await stopScanner();
+      allProducts = [];
+      currentPage = 1;
+      productListEl.innerHTML = "";
+      loadMoreContainer.style.display = "none";
+      infoTextEl.textContent = "";
+      welcomeTextEl.textContent =
+        "Selamat datang di IDM Help Bot. Silakan ketik nama, PLU, barcode, atau gunakan kamera untuk scan barcode produk.";
+    });
+
+    btnCloseModal.addEventListener("click", closeModal);
+    btnCloseFooter.addEventListener("click", closeModal);
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) {
+        closeModal();
+      }
+    });
+
+    (async () => {
+      await loadBarcodeSheet();
+    })();
+</script>
+
+</body>
+</html>
