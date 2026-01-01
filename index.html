@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Cari Produk Indomaret</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    background: #f4f6f9;
+  }
+
+  /* HEADER */
+  .header {
+    background: linear-gradient(135deg, #0d47a1, #1e88e5);
+    color: #fff;
+    padding: 16px;
+    text-align: center;
+  }
+
+  .header h1 {
+    margin: 0;
+    font-size: 20px;
+    letter-spacing: 1px;
+  }
+
+  .bot-credit {
+    margin-top: 6px;
+    font-size: 12px;
+  }
+
+  .bot-credit a {
+    color: #e3f2fd;
+    text-decoration: none;
+    font-weight: bold;
+  }
+
+  /* SEARCH BAR */
+  .search-box {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 12px;
+    background: #1e88e5;
+  }
+
+  .search-input {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    background: #fff;
+    border-radius: 25px;
+    padding: 0 12px;
+  }
+
+  .search-input input {
+    border: none;
+    outline: none;
+    flex: 1;
+    padding: 10px;
+    font-size: 14px;
+  }
+
+  .icon-btn {
+    background: none;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+  }
+
+  .btn {
+    background: #0d47a1;
+    color: #fff;
+    border: none;
+    border-radius: 20px;
+    padding: 10px 14px;
+    font-size: 14px;
+  }
+
+  /* CONTENT */
+  .content {
+    padding: 16px;
+    color: #333;
+    font-size: 14px;
+  }
+
+  video {
+    width: 100%;
+    border-radius: 10px;
+    margin-top: 10px;
+  }
+
+  /* FOOTER */
+  footer {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    background: #fff;
+    text-align: center;
+    padding: 10px;
+    font-size: 12px;
+    color: #666;
+    border-top: 1px solid #ddd;
+  }
+
+  /* LOADING */
+  #loading {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.6);
+    color: #fff;
+    font-size: 18px;
+    align-items: center;
+    justify-content: center;
+    z-index: 999;
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <h1>CARI PRODUK INDOMARET</h1>
+  <div class="bot-credit">
+    <a href="https://t.me/idm_help_bot" target="_blank">idm_help</a> |
+    <a href="https://saweria.co/idmhelpbot" target="_blank">Dukung</a> |
+    <a href="https://carimega.vercel.app/" target="_blank">Mega</a> |
+    <a href="https://hargayomart.vercel.app/" target="_blank">Yomart</a> |
+    <a href="https://idmhelp.vercel.app/" target="_blank">Indomaret</a> |
+    <a href="https://plu-barcode.vercel.app/" target="_blank">Barcode</a> |
+    <a href="https://harga-alfa.vercel.app/" target="_blank">Alfamart</a>
+  </div>
+</div>
+
+<!-- SEARCH -->
+<div class="search-box">
+  <div class="search-input">
+    <input id="keyword" placeholder="Cari Nama / PLU / Barcode...">
+    <button class="icon-btn" onclick="clearInput()">❌</button>
+    <button class="icon-btn" onclick="startScan()">📷</button>
+  </div>
+  <button class="btn" onclick="cariManual()">Cari</button>
+</div>
+
+
+<!-- CONTENT -->
+<div class="content">
+  Selamat datang di <b>IDM Help Bot</b>.  
+  Silakan ketik nama, PLU, barcode, atau gunakan kamera untuk scan barcode produk.
+  <video id="video" hidden></video>
+</div>
+
+<div id="loading">⏳ Mencari produk...</div>
+
+<!-- FOOTER -->
+<footer>
+  © 2025 IDM Help Bot - All rights reserved
+</footer>
+
+<script src="https://unpkg.com/@zxing/library@latest"></script>
+
+<script>
+const BARCODE_URL =
+  "https://raw.githubusercontent.com/idmhelpbot/Cari/main/barcodesheet.json";
+
+const input = document.getElementById("keyword");
+const loading = document.getElementById("loading");
+
+input.addEventListener("keydown", e => {
+  if (e.key === "Enter") cariManual();
+});
+
+function clearInput() {
+  input.value = "";
+  input.focus();
+}
+
+function beep() {
+  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+  const osc = ctx.createOscillator();
+  osc.frequency.value = 1000;
+  osc.connect(ctx.destination);
+  osc.start();
+  setTimeout(() => { osc.stop(); ctx.close(); }, 120);
+}
+
+function showLoading(v) {
+  loading.style.display = v ? "flex" : "none";
+}
+
+function openBrowser(keyword) {
+  const web =
+    "https://www.klikindomaret.com/search?keyword=" +
+    encodeURIComponent(keyword) +
+    "&type=keyword&columnView=2&size=64";
+
+  const intent =
+    "intent://www.klikindomaret.com/search?keyword=" +
+    encodeURIComponent(keyword) +
+    "&type=keyword&columnView=2&size=64" +
+    "#Intent;scheme=https;category=android.intent.category.BROWSABLE;" +
+    "S.browser_fallback_url=" + encodeURIComponent(web) + ";end;";
+
+  window.location.href = intent;
+}
+
+async function cariDenganBarcode(code) {
+  showLoading(true);
+  try {
+    const res = await fetch(BARCODE_URL);
+    const data = await res.json();
+    const found = data.find(x => x.barcode === code);
+    openBrowser(found && found.plu ? found.plu : code);
+  } catch {
+    openBrowser(code);
+  }
+}
+
+function cariManual() {
+  const val = input.value.trim();
+  if (!val) return;
+
+  if (/^\d+$/.test(val)) {
+    cariDenganBarcode(val);
+  } else {
+    openBrowser(val);
+  }
+}
+
+function startScan() {
+  const video = document.getElementById("video");
+  video.hidden = false;
+  const reader = new ZXing.BrowserMultiFormatReader();
+
+  reader.decodeFromVideoDevice(null, video, result => {
+    if (result) {
+      reader.reset();
+      video.hidden = true;
+      beep();
+      cariDenganBarcode(result.text);
+    }
+  });
+}
+</script>
+
+</body>
+</html>
